@@ -10,10 +10,39 @@ const CredentialScanner = () => {
   
   const credentialPatterns = {
     email: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g,
-    password: /(password|pwd|pass)=['"]?([^'"\s]+)/gi,
+    password: /(password|pwd|pass)=['"']?([^'"'\s]+)/gi,
     awsKey: /\bAKIA[0-9A-Z]{16}\b/g,
     githubToken: /\bghp_[a-zA-Z0-9]{36}\b/g,
-    secretKeyword: /(token|secret|key)=['"]?([^'"\s]+)/gi
+    secretKeyword: /(token|secret|key)=['"']?([^'"'\s]+)/gi
+  };
+
+  const getDetectionReason = (type, line) => {
+    if (type === 'awsKey') {
+      return 'Matched AWS Access Key pattern (AKIA followed by 16 characters)';
+    }
+    if (type === 'githubToken') {
+      return 'Matched GitHub Personal Access Token pattern (ghp_ followed by 36 characters)';
+    }
+    if (type === 'password') {
+      return `Password-like pattern detected with keyword: ${line.match(credentialPatterns.password)[1]}`;
+    }
+    if (type === 'email') {
+      const context = line.toLowerCase();
+      if (context.includes('token=')) {
+        return 'Email found with associated keyword "token="';
+      }
+      if (context.includes('secret=')) {
+        return 'Email found with associated keyword "secret="';
+      }
+      if (context.includes('key=')) {
+        return 'Email found with associated keyword "key="';
+      }
+      return 'Standard email pattern detected';
+    }
+    if (type === 'secretKeyword') {
+      return `Sensitive keyword detected: ${line.match(credentialPatterns.secretKeyword)[1]}`;
+    }
+    return 'Pattern matched';
   };
 
   const determineThreatLevel = (type, line) => {
@@ -44,7 +73,8 @@ const CredentialScanner = () => {
             type,
             value: match[0],
             line: lineNumber + 1,
-            threatLevel
+            threatLevel,
+            reason: getDetectionReason(type, line)
           });
         }
       });
@@ -52,7 +82,6 @@ const CredentialScanner = () => {
     
     setResults(findings);
     
-    // Check for high severity findings and trigger alerts
     findings.forEach(finding => {
       if (finding.threatLevel === 'high') {
         alertToastRef.current?.showAlert(finding.type, new Date());
@@ -89,6 +118,20 @@ const CredentialScanner = () => {
     fontWeight: 'bold',
     display: 'inline-block'
   });
+
+  const InfoIcon = ({ text }) => (
+    <span 
+      style={{ 
+        marginLeft: '8px',
+        cursor: 'help',
+        position: 'relative',
+        display: 'inline-block'
+      }}
+      title={text}
+    >
+      ℹ️
+    </span>
+  );
 
   return (
     <div style={{ padding: '20px' }}>
@@ -162,7 +205,10 @@ const CredentialScanner = () => {
                     backgroundColor: index % 2 === 0 ? 'white' : '#f8f9fa'
                   }}
                 >
-                  <td style={{ padding: '10px' }}>{result.type}</td>
+                  <td style={{ padding: '10px' }}>
+                    {result.type}
+                    <InfoIcon text={result.reason} />
+                  </td>
                   <td style={{ padding: '10px' }}>{result.value}</td>
                   <td style={{ padding: '10px' }}>{result.line}</td>
                   <td style={{ padding: '10px' }}>
