@@ -1,12 +1,15 @@
 import React, { useState, useRef } from 'react';
 import ScanHistory from './ScanHistory';
 import AlertToast from './AlertToast';
+import LogHistory from './LogHistory';
 
 const CredentialScanner = () => {
   const scanHistoryRef = useRef();
   const alertToastRef = useRef();
+  const logHistoryRef = useRef();
   const [results, setResults] = useState([]);
   const [textInput, setTextInput] = useState('');
+  const [showLogHistory, setShowLogHistory] = useState(false);
   
   const credentialPatterns = {
     email: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g,
@@ -89,6 +92,7 @@ const CredentialScanner = () => {
     });
 
     scanHistoryRef.current?.addScanSession(findings, textInput ? 'Text Input' : 'File Upload');
+    logHistoryRef.current?.addScanLog(findings, textInput ? 'Text Input' : 'File Upload');
   };
 
   const handleFileUpload = (e) => {
@@ -135,92 +139,119 @@ const CredentialScanner = () => {
 
   return (
     <div style={{ padding: '20px' }}>
-      <h2>Credential Scanner</h2>
-      <AlertToast ref={alertToastRef} />
-      <ScanHistory ref={scanHistoryRef} />
-      
-      <div style={{ marginBottom: '20px' }}>
-        <h3>Upload a file:</h3>
-        <input 
-          type="file" 
-          accept=".txt" 
-          onChange={handleFileUpload}
-          style={{ marginBottom: '10px' }} 
-        />
-      </div>
-      
-      <div style={{ marginBottom: '20px' }}>
-        <h3>Or paste text:</h3>
-        <textarea 
-          value={textInput}
-          onChange={(e) => setTextInput(e.target.value)}
-          rows={10}
-          cols={50}
-          style={{ 
-            width: '100%', 
-            maxWidth: '600px', 
-            padding: '8px',
-            marginBottom: '10px' 
-          }}
-        />
-        <br />
-        <button 
-          onClick={handleTextSubmit}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '20px'
+      }}>
+        <h2>Credential Scanner</h2>
+        <button
+          onClick={() => setShowLogHistory(!showLogHistory)}
           style={{
             padding: '8px 16px',
-            backgroundColor: '#007bff',
+            backgroundColor: '#6c757d',
             color: 'white',
             border: 'none',
             borderRadius: '4px',
             cursor: 'pointer'
           }}
         >
-          Scan Text
+          {showLogHistory ? 'Hide Log History' : 'Show Log History'}
         </button>
       </div>
+
+      <AlertToast ref={alertToastRef} />
+      <ScanHistory ref={scanHistoryRef} />
       
-      {results.length > 0 && (
-        <div>
-          <h3>Scan Results:</h3>
-          <table style={{ 
-            width: '100%', 
-            maxWidth: '800px',
-            borderCollapse: 'collapse',
-            marginTop: '10px'
-          }}>
-            <thead>
-              <tr style={{ backgroundColor: '#f8f9fa' }}>
-                <th style={{ padding: '10px', textAlign: 'left' }}>Type</th>
-                <th style={{ padding: '10px', textAlign: 'left' }}>Value</th>
-                <th style={{ padding: '10px', textAlign: 'left' }}>Line Number</th>
-                <th style={{ padding: '10px', textAlign: 'left' }}>Threat Level</th>
-              </tr>
-            </thead>
-            <tbody>
-              {results.map((result, index) => (
-                <tr 
-                  key={index}
-                  style={{ 
-                    borderBottom: '1px solid #dee2e6',
-                    backgroundColor: index % 2 === 0 ? 'white' : '#f8f9fa'
-                  }}
-                >
-                  <td style={{ padding: '10px' }}>
-                    {result.type}
-                    <InfoIcon text={result.reason} />
-                  </td>
-                  <td style={{ padding: '10px' }}>{result.value}</td>
-                  <td style={{ padding: '10px' }}>{result.line}</td>
-                  <td style={{ padding: '10px' }}>
-                    <span style={getThreatLevelStyle(result.threatLevel)}>
-                      {result.threatLevel.toUpperCase()}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      {showLogHistory ? (
+        <LogHistory ref={logHistoryRef} />
+      ) : (
+        <>
+          <div style={{ marginBottom: '20px' }}>
+            <h3>Upload a file:</h3>
+            <input 
+              type="file" 
+              accept=".txt" 
+              onChange={handleFileUpload}
+              style={{ marginBottom: '10px' }} 
+            />
+          </div>
+          
+          <div style={{ marginBottom: '20px' }}>
+            <h3>Or paste text:</h3>
+            <textarea 
+              value={textInput}
+              onChange={(e) => setTextInput(e.target.value)}
+              rows={10}
+              cols={50}
+              style={{ 
+                width: '100%', 
+                maxWidth: '600px', 
+                padding: '8px',
+                marginBottom: '10px' 
+              }}
+            />
+            <br />
+            <button 
+              onClick={handleTextSubmit}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: '#007bff',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer'
+              }}
+            >
+              Scan Text
+            </button>
+          </div>
+          
+          {results.length > 0 && (
+            <div>
+              <h3>Scan Results:</h3>
+              <table style={{ 
+                width: '100%', 
+                maxWidth: '800px',
+                borderCollapse: 'collapse',
+                marginTop: '10px'
+              }}>
+                <thead>
+                  <tr style={{ backgroundColor: '#f8f9fa' }}>
+                    <th style={{ padding: '10px', textAlign: 'left' }}>Type</th>
+                    <th style={{ padding: '10px', textAlign: 'left' }}>Value</th>
+                    <th style={{ padding: '10px', textAlign: 'left' }}>Line Number</th>
+                    <th style={{ padding: '10px', textAlign: 'left' }}>Threat Level</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {results.map((result, index) => (
+                    <tr 
+                      key={index}
+                      style={{ 
+                        borderBottom: '1px solid #dee2e6',
+                        backgroundColor: index % 2 === 0 ? 'white' : '#f8f9fa'
+                      }}
+                    >
+                      <td style={{ padding: '10px' }}>
+                        {result.type}
+                        <InfoIcon text={result.reason} />
+                      </td>
+                      <td style={{ padding: '10px' }}>{result.value}</td>
+                      <td style={{ padding: '10px' }}>{result.line}</td>
+                      <td style={{ padding: '10px' }}>
+                        <span style={getThreatLevelStyle(result.threatLevel)}>
+                          {result.threatLevel.toUpperCase()}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
