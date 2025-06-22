@@ -1,8 +1,10 @@
 import React, { useState, useRef } from 'react';
 import ScanHistory from './ScanHistory';
+import AlertToast from './AlertToast';
 
 const CredentialScanner = () => {
   const scanHistoryRef = useRef();
+  const alertToastRef = useRef();
   const [results, setResults] = useState([]);
   const [textInput, setTextInput] = useState('');
   
@@ -49,6 +51,14 @@ const CredentialScanner = () => {
     });
     
     setResults(findings);
+    
+    // Check for high severity findings and trigger alerts
+    findings.forEach(finding => {
+      if (finding.threatLevel === 'high') {
+        alertToastRef.current?.showAlert(finding.type, new Date());
+      }
+    });
+
     scanHistoryRef.current?.addScanSession(findings, textInput ? 'Text Input' : 'File Upload');
   };
 
@@ -83,6 +93,7 @@ const CredentialScanner = () => {
   return (
     <div style={{ padding: '20px' }}>
       <h2>Credential Scanner</h2>
+      <AlertToast ref={alertToastRef} />
       <ScanHistory ref={scanHistoryRef} />
       
       <div style={{ marginBottom: '20px' }}>
