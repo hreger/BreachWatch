@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import ScanHistory from './ScanHistory';
 
 const CredentialScanner = () => {
+  const scanHistoryRef = useRef();
   const [results, setResults] = useState([]);
   const [textInput, setTextInput] = useState('');
   
@@ -8,7 +10,22 @@ const CredentialScanner = () => {
     email: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g,
     password: /(password|pwd|pass)=['"]?([^'"\s]+)/gi,
     awsKey: /\bAKIA[0-9A-Z]{16}\b/g,
-    githubToken: /\bghp_[a-zA-Z0-9]{36}\b/g
+    githubToken: /\bghp_[a-zA-Z0-9]{36}\b/g,
+    secretKeyword: /(token|secret|key)=['"]?([^'"\s]+)/gi
+  };
+
+  const determineThreatLevel = (type, line) => {
+    if (type === 'awsKey' || type === 'githubToken' || type === 'password') {
+      return 'high';
+    }
+    if (type === 'email' && (
+      line.toLowerCase().includes('token=') || 
+      line.toLowerCase().includes('secret=') || 
+      line.toLowerCase().includes('key=')
+    )) {
+      return 'medium';
+    }
+    return 'low';
   };
 
   const scanText = (text) => {
@@ -20,16 +37,19 @@ const CredentialScanner = () => {
       
       lines.forEach((line, lineNumber) => {
         while ((match = pattern.exec(line)) !== null) {
+          const threatLevel = determineThreatLevel(type, line);
           findings.push({
             type,
             value: match[0],
-            line: lineNumber + 1
+            line: lineNumber + 1,
+            threatLevel
           });
         }
       });
     });
     
     setResults(findings);
+    scanHistoryRef.current?.addScanSession(findings, textInput ? 'Text Input' : 'File Upload');
   };
 
   const handleFileUpload = (e) => {
@@ -47,43 +67,98 @@ const CredentialScanner = () => {
     scanText(textInput);
   };
 
+  const getThreatLevelStyle = (level) => ({
+    backgroundColor: {
+      high: '#ff4444',
+      medium: '#ffbb33',
+      low: '#00C851'
+    }[level],
+    color: 'white',
+    padding: '2px 6px',
+    borderRadius: '4px',
+    fontWeight: 'bold',
+    display: 'inline-block'
+  });
+
   return (
-    <div>
+    <div style={{ padding: '20px' }}>
       <h2>Credential Scanner</h2>
+      <ScanHistory ref={scanHistoryRef} />
       
-      <div>
+      <div style={{ marginBottom: '20px' }}>
         <h3>Upload a file:</h3>
-        <input type="file" accept=".txt" onChange={handleFileUpload} />
+        <input 
+          type="file" 
+          accept=".txt" 
+          onChange={handleFileUpload}
+          style={{ marginBottom: '10px' }} 
+        />
       </div>
       
-      <div>
+      <div style={{ marginBottom: '20px' }}>
         <h3>Or paste text:</h3>
         <textarea 
           value={textInput}
           onChange={(e) => setTextInput(e.target.value)}
           rows={10}
           cols={50}
+          style={{ 
+            width: '100%', 
+            maxWidth: '600px', 
+            padding: '8px',
+            marginBottom: '10px' 
+          }}
         />
-        <button onClick={handleTextSubmit}>Scan Text</button>
+        <br />
+        <button 
+          onClick={handleTextSubmit}
+          style={{
+            padding: '8px 16px',
+            backgroundColor: '#007bff',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer'
+          }}
+        >
+          Scan Text
+        </button>
       </div>
       
       {results.length > 0 && (
         <div>
           <h3>Scan Results:</h3>
-          <table>
+          <table style={{ 
+            width: '100%', 
+            maxWidth: '800px',
+            borderCollapse: 'collapse',
+            marginTop: '10px'
+          }}>
             <thead>
-              <tr>
-                <th>Type</th>
-                <th>Value</th>
-                <th>Line Number</th>
+              <tr style={{ backgroundColor: '#f8f9fa' }}>
+                <th style={{ padding: '10px', textAlign: 'left' }}>Type</th>
+                <th style={{ padding: '10px', textAlign: 'left' }}>Value</th>
+                <th style={{ padding: '10px', textAlign: 'left' }}>Line Number</th>
+                <th style={{ padding: '10px', textAlign: 'left' }}>Threat Level</th>
               </tr>
             </thead>
             <tbody>
               {results.map((result, index) => (
-                <tr key={index}>
-                  <td>{result.type}</td>
-                  <td>{result.value}</td>
-                  <td>{result.line}</td>
+                <tr 
+                  key={index}
+                  style={{ 
+                    borderBottom: '1px solid #dee2e6',
+                    backgroundColor: index % 2 === 0 ? 'white' : '#f8f9fa'
+                  }}
+                >
+                  <td style={{ padding: '10px' }}>{result.type}</td>
+                  <td style={{ padding: '10px' }}>{result.value}</td>
+                  <td style={{ padding: '10px' }}>{result.line}</td>
+                  <td style={{ padding: '10px' }}>
+                    <span style={getThreatLevelStyle(result.threatLevel)}>
+                      {result.threatLevel.toUpperCase()}
+                    </span>
+                  </td>
                 </tr>
               ))}
             </tbody>
