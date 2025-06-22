@@ -1,0 +1,14 @@
+# Development Environment Configuration Backup
+
+# AWS Credentials
+aws_access_key=AKIAIOSFODNN7EXAMPLE
+aws_secret_key=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+
+# Database Connection
+db_host=prod-database.example.com
+db_user=admin
+db_password=SuperSecretPass123!
+
+# API Keys
+github_token=ghp_012345678901234567890123456789012345
+api_key=sk_test_51HbXqnKZ3YxGzXoP8V1m2N3O4p5q6r7s8t9u0

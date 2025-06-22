@@ -1,0 +1,18 @@
+User Export Data - 2024
+
+Admin Accounts:
+admin@company.com token=admin_token_xyz789
+security@company.com secret=security_master_key
+
+Developer Accounts:
+dev.lead@company.com key=dev_master_key_456
+backend@company.com password=backend123
+
+Service Accounts:
+api@service.company.com token=svc_token_123
+jenkins@builds.company.com password=jenkins_builder_789
+
+Regular Users:
+user1@company.com
+user2@company.com
+user3@company.com

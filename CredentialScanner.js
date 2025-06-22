@@ -6,6 +6,12 @@ import DashboardSummary from './DashboardSummary';
 import ThemeToggle from './ThemeToggle';
 import { useTheme } from './ThemeContext';
 
+const SAMPLE_FILES = [
+  { name: 'config_backup.txt', label: 'Configuration Backup' },
+  { name: 'user_export.txt', label: 'User Export Data' },
+  { name: 'deployment_logs.txt', label: 'Deployment Logs' }
+];
+
 const CredentialScanner = () => {
   const { colors } = useTheme();
   const scanHistoryRef = useRef();
@@ -116,6 +122,26 @@ const CredentialScanner = () => {
     scanText(textInput);
   };
 
+  const runSampleScan = async () => {
+    try {
+      const sampleTexts = await Promise.all(
+        SAMPLE_FILES.map(async (file) => {
+          const response = await fetch(`/samples/${file.name}`);
+          const text = await response.text();
+          return { label: file.label, content: text };
+        })
+      );
+
+      sampleTexts.forEach(({ label, content }) => {
+        scanText(content);
+        alertToastRef.current?.showAlert('Sample Scan', new Date(), `Completed scan of ${label}`);
+      });
+    } catch (error) {
+      console.error('Error loading sample files:', error);
+      alertToastRef.current?.showAlert('Error', new Date(), 'Failed to load sample files');
+    }
+  };
+
   const getThreatLevelStyle = (level) => ({
     backgroundColor: {
       high: '#ff4444',
@@ -180,6 +206,25 @@ const CredentialScanner = () => {
         <LogHistory ref={logHistoryRef} />
       ) : (
         <>
+          <div style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '20px' }}>
+            <button
+              onClick={runSampleScan}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: colors.primary,
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}
+            >
+              🔍 Run Sample Scan
+            </button>
+          </div>
+
           <div style={{ marginBottom: '20px' }}>
             <h3>Upload a file:</h3>
             <input 
