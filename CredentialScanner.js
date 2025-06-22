@@ -122,6 +122,38 @@ const CredentialScanner = () => {
     scanText(textInput);
   };
 
+  const exportToCSV = () => {
+    if (results.length === 0) {
+      alertToastRef.current?.showAlert('Export', new Date(), 'No results to export');
+      return;
+    }
+
+    const timestamp = new Date().toISOString();
+    const csvContent = [
+      ['Credential', 'Type', 'Severity', 'Timestamp'],
+      ...results.map(result => [
+        result.value,
+        result.type,
+        result.threatLevel,
+        timestamp
+      ])
+    ].map(row => row.join(',')).join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', `credential_scan_${timestamp}.csv`);
+    link.style.visibility = 'hidden';
+    
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    alertToastRef.current?.showAlert('Export', new Date(), 'Results exported successfully');
+  };
+
   const runSampleScan = async () => {
     try {
       const sampleTexts = await Promise.all(
@@ -222,6 +254,22 @@ const CredentialScanner = () => {
               }}
             >
               🔍 Run Sample Scan
+            </button>
+            <button
+              onClick={exportToCSV}
+              style={{
+                padding: '8px 16px',
+                backgroundColor: colors.success,
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}
+            >
+              📊 Export Results
             </button>
           </div>
 
