@@ -1,6 +1,8 @@
 import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
+import { useTheme } from './ThemeContext';
 
 const DashboardSummary = forwardRef((props, ref) => {
+  const { colors } = useTheme();
   const [stats, setStats] = useState({
     totalScans: 0,
     totalCredentials: 0,
@@ -41,16 +43,16 @@ const DashboardSummary = forwardRef((props, ref) => {
 
   const StatCard = ({ title, value, suffix, color }) => (
     <div style={{
-      backgroundColor: 'white',
+      backgroundColor: colors.surface,
       borderRadius: '8px',
       padding: '20px',
-      boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+      boxShadow: `0 2px 4px ${colors.isDarkMode ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.1)}',
       flex: 1,
       margin: '0 10px',
       textAlign: 'center'
     }}>
       <h3 style={{ 
-        color: '#6c757d',
+        color: colors.textSecondary,
         marginTop: 0,
         marginBottom: '10px',
         fontSize: '1rem'
@@ -72,7 +74,7 @@ const DashboardSummary = forwardRef((props, ref) => {
       display: 'flex',
       justifyContent: 'space-between',
       marginBottom: '30px',
-      backgroundColor: '#f8f9fa',
+      backgroundColor: colors.surface,
       padding: '20px',
       borderRadius: '10px'
     }}>

@@ -3,8 +3,11 @@ import ScanHistory from './ScanHistory';
 import AlertToast from './AlertToast';
 import LogHistory from './LogHistory';
 import DashboardSummary from './DashboardSummary';
+import ThemeToggle from './ThemeToggle';
+import { useTheme } from './ThemeContext';
 
 const CredentialScanner = () => {
+  const { colors } = useTheme();
   const scanHistoryRef = useRef();
   const alertToastRef = useRef();
   const logHistoryRef = useRef();
@@ -141,7 +144,12 @@ const CredentialScanner = () => {
   );
 
   return (
-    <div style={{ padding: '20px' }}>
+    <div style={{ 
+      padding: '20px',
+      backgroundColor: colors.background,
+      color: colors.text,
+      minHeight: '100vh'
+    }}>
       <div style={{
         display: 'flex',
         justifyContent: 'space-between',
@@ -153,8 +161,8 @@ const CredentialScanner = () => {
           onClick={() => setShowLogHistory(!showLogHistory)}
           style={{
             padding: '8px 16px',
-            backgroundColor: '#6c757d',
-            color: 'white',
+            backgroundColor: colors.primary,
+            color: '#ffffff',
             border: 'none',
             borderRadius: '4px',
             cursor: 'pointer'
@@ -193,7 +201,11 @@ const CredentialScanner = () => {
                 width: '100%', 
                 maxWidth: '600px', 
                 padding: '8px',
-                marginBottom: '10px' 
+                marginBottom: '10px',
+                backgroundColor: colors.surface,
+                color: colors.text,
+                border: `1px solid ${colors.border}`,
+                borderRadius: '4px'
               }}
             />
             <br />
