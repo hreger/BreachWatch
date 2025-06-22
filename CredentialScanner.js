@@ -2,11 +2,13 @@ import React, { useState, useRef } from 'react';
 import ScanHistory from './ScanHistory';
 import AlertToast from './AlertToast';
 import LogHistory from './LogHistory';
+import DashboardSummary from './DashboardSummary';
 
 const CredentialScanner = () => {
   const scanHistoryRef = useRef();
   const alertToastRef = useRef();
   const logHistoryRef = useRef();
+  const dashboardRef = useRef();
   const [results, setResults] = useState([]);
   const [textInput, setTextInput] = useState('');
   const [showLogHistory, setShowLogHistory] = useState(false);
@@ -93,6 +95,7 @@ const CredentialScanner = () => {
 
     scanHistoryRef.current?.addScanSession(findings, textInput ? 'Text Input' : 'File Upload');
     logHistoryRef.current?.addScanLog(findings, textInput ? 'Text Input' : 'File Upload');
+    dashboardRef.current?.updateDashboard();
   };
 
   const handleFileUpload = (e) => {
@@ -161,6 +164,7 @@ const CredentialScanner = () => {
         </button>
       </div>
 
+      <DashboardSummary ref={dashboardRef} />
       <AlertToast ref={alertToastRef} />
       <ScanHistory ref={scanHistoryRef} />
       
